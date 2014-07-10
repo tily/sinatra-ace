@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "sinatra-ace"
   gem.homepage = "http://github.com/tily/sinatra-ace"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Sinatra Extension for ACE(Aws Compatible Environment)}
+  gem.description = %Q{Sinatra Extension for ACE(Aws Compatible Environment)}
   gem.email = "tidnlyam@gmail.com"
   gem.authors = ["tily"]
   # dependencies defined in Gemfile
