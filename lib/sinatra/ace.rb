@@ -24,7 +24,7 @@ module Sinatra
 				end
 			end
 
-			def response_xml(&block)
+			def response_xml
 				builder do |xml|
 					xml.instruct!
 					xml.tag!("#{requested_action}Response") do
@@ -53,20 +53,48 @@ module Sinatra
 
 
 		module Dsl
+			attr_reader :actions
+
+			def action(action, options={}, &block)
+				@actions ||= Array.new
+				raise 'Error: path was specified at two places' if options[:path] && @path
+				raise 'Error: version was specified at two places' if options[:version] && @version
+				path = @path || options[:path] || '/'
+				version = @version || options[:version] || nil
+				@actions << {action: action, block: block, path: path, version: version}
+			end
+
+			def version(version)
+				original_version = @version
+				@version = version
+				yield
+				@version = original_version
+			end
+
+			def path(path)
+				original_path = @path
+				@path = path
+				yield
+				@path = original_path
+			end
+
 			def dispatch!
-				@paths.each do |path, opts|
+				paths = @actions.map {|action| action[:path] }.uniq
+				paths.each do |path|
 					[:get, :post].each do |x|
 						send(x, path) do
-							opt = opts.select {|opt| opt[:action] == params['Action'] }
-							instance_eval(&opt[:block]) if opt
+							actions = self.class.actions.select do |action|
+								action[:path] == env['sinatra.route'].split(' ').last &&
+								action[:action] == requested_action &&
+								[requested_version, nil].include?(action[:version])
+							end
+							raise 'Error: action was not found' if actions.empty? # TODO: raise custom error
+							action = actions.find {|action| action[:version] == requested_version } || actions.first
+							logger.info "calling action: #{action}"
+							instance_eval(&action[:block])
 						end
 					end
 				end
-			end
-
-			def action(action, path='/', &block)
-				@paths ||= Hash.new {|h, k| h[k] = [] }
-				@paths[path] << {action: action, block: block}
 			end
 		end
 
