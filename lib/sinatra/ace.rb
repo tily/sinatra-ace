@@ -7,8 +7,12 @@ module Sinatra
 				@request_id ||= SecureRandom.uuid
 			end
 
-			def action
+			def requested_action
 				params['Action']
+			end
+
+			def requested_version
+				params['Version']
 			end
 
 			def attributes
@@ -23,9 +27,9 @@ module Sinatra
 			def response_xml(&block)
 				builder do |xml|
 					xml.instruct!
-					xml.tag!("#{action}Response") do
-						xml.tag!("#{action}Result") do
-							block.call(xml)
+					xml.tag!("#{requested_action}Response") do
+						xml.tag!("#{requested_action}Result") do
+							yield(xml)
 						end
 						xml.ResponseMetadata { xml.RequestId request_id }
 					end
